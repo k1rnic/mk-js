@@ -35,9 +35,10 @@ function createPlayer(player, character) {
 
     const $container = htmlCreate('div', 'character');
     const $characterImg = htmlCreate('img', 'character-img');
+
     $characterImg.setAttribute(
       'src',
-      `http://reactmarathon-api.herokuapp.com/assets/${character.name}.gif`,
+      `./assets/fighters/${character.name}.gif`,
     );
 
     $container.appendChild($characterImg);
@@ -60,8 +61,8 @@ function addToArena(player) {
   $arena.appendChild(player);
 }
 
-const playerOne = createPlayer('player1', createCharacter('sonya'));
-const playerTwo = createPlayer('player2', createCharacter('kitana'));
+const playerOne = createPlayer('player1', createCharacter('policewoman'));
+const playerTwo = createPlayer('player2', createCharacter('sister'));
 
 addToArena(playerOne);
 addToArena(playerTwo);
