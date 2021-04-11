@@ -1,9 +1,12 @@
+const DEFAULT_CHAR_HEIGHT = 268;
+
 const CHARACTERS = {
-  policewoman: {
-    weapons: ['handcuffs'],
-  },
-  stepsister: {
-    weapons: ['cross'],
+  anfisa: {
+    weapon: ['fan'],
+    animationDuration: {
+      punch: 1500,
+      damage: 1500,
+    },
   },
 };
 
@@ -15,11 +18,14 @@ function createElement(element, ...classNames) {
 }
 
 class Player {
+  animationDuration = null;
+
   constructor(id, name) {
     this.id = id;
     this.name = name;
     this.hp = 100;
-    this.characteristic = CHARACTERS[this.name];
+    this.props = CHARACTERS[this.name];
+    this.isWinner = false;
     this.createElement();
   }
 
@@ -28,6 +34,7 @@ class Player {
 
     this.createLifePanel();
     this.createCharacterPlaceholder();
+    this.setSprite('pose', true);
   };
 
   createLifePanel = () => {
@@ -45,22 +52,51 @@ class Player {
 
   createCharacterPlaceholder = () => {
     this.$characterPlaceholder = createElement('div', 'character');
-    const $characterImg = createElement('img', 'character-img');
-
-    $characterImg.setAttribute('src', `./assets/fighters/${this.name}.gif`);
-
-    this.$characterPlaceholder.appendChild($characterImg);
+    this.$sprite = createElement('img', 'character-img');
+    this.$characterPlaceholder.appendChild(this.$sprite);
     this.$element.appendChild(this.$characterPlaceholder);
   };
+
+  do = (action) => {
+    this.$sprite.setAttribute(
+      'src',
+      `./assets/fighters/${this.name}/${action}.gif`,
+    );
+  };
+
+  setSprite = (action, repeat) => {
+    clearTimeout(this.animationDuration);
+    this.do(action);
+
+    if (!repeat) {
+      this.animationDuration = setTimeout(() => {
+        this.do('pose');
+      }, CHARACTERS[this.name].animationDuration[action]);
+    }
+  };
+
+  isLost = () => this.hp === 0;
 
   damage = (damage) => {
     this.hp = Math.max(0, this.hp - damage);
     this.$lifeIndicator.style.width = `${this.hp}%`;
+
+    this.setSprite('damage');
   };
 
   punch = (enemy) => {
-    const damage = Math.ceil(Math.random() * 20);
-    enemy.damage(damage);
+    enemy.damage(Math.ceil(Math.random() * 20));
+    this.isWinner = enemy.isLost();
+
+    this.setSprite('punch');
+  };
+
+  lose = () => {
+    this.setSprite('lose', true);
+  };
+
+  win = () => {
+    this.setSprite('win', true);
   };
 }
 
@@ -98,8 +134,10 @@ class Game {
     if (enemy.hp === 0) {
       this.$punchTrigger.disabled = true;
       this.arena.congratulate(punisher.name);
+      punisher.win();
+      enemy.lose();
     }
   };
 }
 
-const game = new Game([new Player(1, 'policewoman'), new Player(2, 'sister')]);
+const game = new Game([new Player(1, 'anfisa'), new Player(2, 'anfisa')]);
