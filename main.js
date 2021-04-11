@@ -1,5 +1,3 @@
-const DEFAULT_CHAR_HEIGHT = 268;
-
 const CHARACTERS = {
   anfisa: {
     weapon: ['fan'],
@@ -34,7 +32,7 @@ class Player {
 
     this.createLifePanel();
     this.createCharacterPlaceholder();
-    this.setSprite('pose', true);
+    this.setSprite('pose');
   };
 
   createLifePanel = () => {
@@ -64,13 +62,13 @@ class Player {
     );
   };
 
-  setSprite = (action, repeat) => {
+  setSprite = (action, fallbackSprite) => {
     clearTimeout(this.animationDuration);
     this.do(action);
 
-    if (!repeat) {
+    if (fallbackSprite) {
       this.animationDuration = setTimeout(() => {
-        this.do('pose');
+        this.do(fallbackSprite);
       }, CHARACTERS[this.name].animationDuration[action]);
     }
   };
@@ -81,22 +79,17 @@ class Player {
     this.hp = Math.max(0, this.hp - damage);
     this.$lifeIndicator.style.width = `${this.hp}%`;
 
-    this.setSprite('damage');
+    this.isLost()
+      ? this.setSprite('damage', 'lose')
+      : this.setSprite('damage', 'pose');
   };
 
   punch = (enemy) => {
     enemy.damage(Math.ceil(Math.random() * 20));
-    this.isWinner = enemy.isLost();
 
-    this.setSprite('punch');
-  };
-
-  lose = () => {
-    this.setSprite('lose', true);
-  };
-
-  win = () => {
-    this.setSprite('win', true);
+    enemy.isLost()
+      ? this.setSprite('punch', 'win')
+      : this.setSprite('punch', 'pose');
   };
 }
 
@@ -134,8 +127,6 @@ class Game {
     if (enemy.hp === 0) {
       this.$punchTrigger.disabled = true;
       this.arena.congratulate(punisher.name);
-      punisher.win();
-      enemy.lose();
     }
   };
 }
