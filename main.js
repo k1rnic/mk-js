@@ -1,67 +1,134 @@
-function createCharacter(name, weapon = ['заточка']) {
-  return {
-    name,
-    hp: 100,
-    weapon,
-    attack: function () {
-      console.log(`${name} Fight...`);
+const CHARACTERS = {
+  anfisa: {
+    weapon: ['fan'],
+    animationDuration: {
+      punch: 1500,
+      damage: 1500,
     },
-  };
-}
+  },
+};
 
-function htmlCreate(element, ...classNames) {
+function createElement(element, ...classNames) {
   const $htmlElement = document.createElement(element);
   $htmlElement.classList.add(...classNames);
 
   return $htmlElement;
 }
 
-function createPlayer(player, character) {
-  function createLifePanel(character) {
-    const $container = htmlCreate('div', 'progressbar');
+class Player {
+  animationDuration = null;
 
-    const $lifeIndicator = htmlCreate('div', 'life', `life-${character.hp}`);
-    const $characterName = htmlCreate('div', 'name');
-
-    $characterName.innerText = character.name;
-
-    $container.append($lifeIndicator, $characterName);
-
-    return $container;
+  constructor(id, name) {
+    this.id = id;
+    this.name = name;
+    this.hp = 100;
+    this.props = CHARACTERS[this.name];
+    this.isWinner = false;
+    this.createElement();
   }
 
-  function createCharacter(character) {
-    console.log(character);
+  createElement = () => {
+    this.$element = createElement('div', `player${this.id}`);
 
-    const $container = htmlCreate('div', 'character');
-    const $characterImg = htmlCreate('img', 'character-img');
-    $characterImg.setAttribute(
+    this.createLifePanel();
+    this.createCharacterPlaceholder();
+    this.setSprite('pose');
+  };
+
+  createLifePanel = () => {
+    this.$lifePanel = createElement('div', 'progressbar');
+
+    this.$lifeIndicator = createElement('div', 'life');
+    this.$lifeIndicator.style.width = `${this.hp}%`;
+
+    this.$characterName = createElement('div', 'name');
+    this.$characterName.innerText = this.name;
+
+    this.$lifePanel.append(this.$lifeIndicator, this.$characterName);
+    this.$element.appendChild(this.$lifePanel);
+  };
+
+  createCharacterPlaceholder = () => {
+    this.$characterPlaceholder = createElement('div', 'character');
+    this.$sprite = createElement('img', 'character-img');
+    this.$characterPlaceholder.appendChild(this.$sprite);
+    this.$element.appendChild(this.$characterPlaceholder);
+  };
+
+  do = (action) => {
+    this.$sprite.setAttribute(
       'src',
-      `http://reactmarathon-api.herokuapp.com/assets/${character.name}.gif`,
+      `./assets/fighters/${this.name}/${action}.gif`,
     );
+  };
 
-    $container.appendChild($characterImg);
+  setSprite = (action, fallbackSprite) => {
+    clearTimeout(this.animationDuration);
+    this.do(action);
 
-    return $container;
+    if (fallbackSprite) {
+      this.animationDuration = setTimeout(() => {
+        this.do(fallbackSprite);
+      }, CHARACTERS[this.name].animationDuration[action]);
+    }
+  };
+
+  isLost = () => this.hp === 0;
+
+  damage = (damage) => {
+    this.hp = Math.max(0, this.hp - damage);
+    this.$lifeIndicator.style.width = `${this.hp}%`;
+
+    this.isLost()
+      ? this.setSprite('damage', 'lose')
+      : this.setSprite('damage', 'pose');
+  };
+
+  punch = (enemy) => {
+    enemy.damage(Math.ceil(Math.random() * 20));
+
+    enemy.isLost()
+      ? this.setSprite('punch', 'win')
+      : this.setSprite('punch', 'pose');
+  };
+}
+
+class Arena {
+  constructor(players) {
+    this.$element = document.querySelector('.arenas');
+    this.players = players;
+    this.players.forEach((player) => {
+      this.$element.appendChild(player.$element);
+    });
   }
 
-  const $container = htmlCreate('div', player);
-
-  const lifePanel = createLifePanel(character);
-  $container.appendChild(lifePanel);
-  $container.appendChild(createCharacter(character));
-
-  return $container;
+  congratulate(winnerName) {
+    const $congratulationTitle = createElement('div', 'winnerTitle');
+    $congratulationTitle.innerText = `${winnerName} wins`;
+    this.$element.appendChild($congratulationTitle);
+  }
 }
 
-function addToArena(player) {
-  const $arena = document.querySelector('.arenas');
+class Game {
+  constructor(players) {
+    this.arena = new Arena(players);
+    this.$punchTrigger = document.querySelector('.punch-trigger');
+    this.$punchTrigger.addEventListener('click', this.luckyPunch);
+  }
 
-  $arena.appendChild(player);
+  randomize = () => {
+    return this.arena.players.sort(() => Math.random() - 0.5);
+  };
+
+  luckyPunch = () => {
+    const [punisher, enemy] = this.randomize();
+    punisher.punch(enemy);
+
+    if (enemy.hp === 0) {
+      this.$punchTrigger.disabled = true;
+      this.arena.congratulate(punisher.name);
+    }
+  };
 }
 
-const playerOne = createPlayer('player1', createCharacter('sonya'));
-const playerTwo = createPlayer('player2', createCharacter('kitana'));
-
-addToArena(playerOne);
-addToArena(playerTwo);
+const game = new Game([new Player(1, 'anfisa'), new Player(2, 'anfisa')]);
