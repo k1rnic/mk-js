@@ -307,6 +307,11 @@ body {
   z-index: 1000;
 }
 
+.controller:invalid .fight-btn {
+  pointer-events: none;
+  background-color: red;
+}
+
 .inputWrap {
   position: relative;
   width: 280px;

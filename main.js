@@ -107,8 +107,18 @@ function createPlayer(id, name) {
     return this;
   }
 
-  function _renderFighter(sprite = 'pose') {
+  function _renderFighter(sprite = 'pose', fallbackSprite = '') {
+    clearTimeout(this._animating);
     this.$sprite.attrs({ src: `./assets/fighters/${this.name}/${sprite}.gif` });
+
+    if (fallbackSprite) {
+      this._animating = setTimeout(() => {
+        this.$sprite.attrs({
+          src: `./assets/fighters/${this.name}/${fallbackSprite}.gif`,
+        });
+      }, FIGHTERS[this.name].animationDuration[sprite]);
+    }
+
     return this;
   }
 
@@ -122,11 +132,19 @@ function createPlayer(id, name) {
   }
 
   function setDamage(damage) {
-    return this._changeHP(damage)._renderHP();
+    this._changeHP(damage)._renderHP();
+
+    this.isLost()
+      ? this._renderFighter('fall', 'lose')
+      : this._renderFighter('fall', 'pose');
   }
 
   function hit(enemy, attack) {
-    return enemy.setDamage(attack.damage);
+    enemy.setDamage(attack.damage);
+
+    enemy.isLost()
+      ? this._renderFighter('punch', 'win')
+      : this._renderFighter('punch', 'pose');
   }
 
   const fighter = createFighter(name);
@@ -142,6 +160,7 @@ function createPlayer(id, name) {
     _createLifeIndicator,
     _createFighterPlaceholder,
     _changeHP,
+    _animating: false,
     ...fighter,
   };
 
