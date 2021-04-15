@@ -1,111 +1,3 @@
-//   function doAction(action, fallbackAction) {
-//     clearTimeout(this.animationDuration);
-//     this.setSprite(action);
-
-//     if (fallbackAction) {
-//       this.animationDuration = setTimeout(() => {
-//         this.setSprite(fallbackAction);
-//       }, CHARACTERS[this.name].animationDuration[action]);
-//     }
-//   }
-
-//   const player = {
-//     id,
-//     name,
-//     hp: 100,
-//     isLost: function () {
-//       return this.hp === 0;
-//     },
-//     punch: function (enemy, damage) {
-//       enemy.setDamage(damage);
-//       enemy.isLost()
-//         ? this.doAction('punch', 'win')
-//         : this.doAction('punch', 'pose');
-//     },
-//     setDamage: function (damage) {
-//       this.changeHP(damage);
-//       this.renderHP();
-//       this.isLost()
-//         ? this.doAction('fall', 'lose')
-//         : this.doAction('fall', 'pose');
-//     },
-//     elHP,
-//     changeHP,
-//     renderHP,
-//     create,
-//     createLifePanel,
-//     createCharacterPlaceholder,
-//     doAction,
-//     setSprite,
-//     ...CHARACTERS[name],
-//   };
-
-//   return player.create();
-// }
-
-// function createArena(playerOne, playerTwo) {
-//   function shufflePlayers(players) {
-//     return players.sort(() => Math.random() - 0.5);
-//   }
-
-//   function getRandomDamage() {
-//     return Math.ceil(Math.random() * 20);
-//   }
-
-//   function randomPunch() {
-//     const [punisher, enemy] = shufflePlayers([playerOne, playerTwo]);
-
-//     punisher.punch(enemy, getRandomDamage());
-
-//     if (enemy.isLost()) {
-//       finishHim(punisher);
-//     }
-//   }
-
-//   function finishHim(winner) {
-//     showResults(winner);
-//   }
-//   function showResults(winner) {
-//     const $results = document.querySelector('.results');
-
-//     $results.innerText = winner ? `${winner.name} wins` : `Draw`;
-//     hideControl('restart', false);
-//     disableControl('punch', true);
-//   }
-
-//   function createControls() {
-//     const $restartBtn = createElement('button', {
-//       classNames: ['btn', 'restart-btn'],
-//     });
-//     $restartBtn.innerText = 'restart';
-//     $restartBtn.style.visibility = 'hidden';
-//     $restartBtn.addEventListener('click', function () {
-//       location.reload();
-//     });
-
-//     const $punchBtn = createElement('button', {
-//       classNames: ['btn', 'punch-btn'],
-//     });
-//     $punchBtn.innerText = 'lucky punch';
-//     $punchBtn.addEventListener('click', randomPunch);
-
-//     document.querySelector('.control').append($punchBtn, $restartBtn);
-//   }
-
-//   function hideControl(name, state) {
-//     const $control = document.querySelector(`.btn.${name}-btn`);
-
-//     $control.style.visibility = state ? 'hidden' : 'visible';
-//   }
-
-//   function disableControl(name, state) {
-//     const $control = document.querySelector(`.btn.${name}-btn`);
-
-//     $control.disabled = state;
-//   }
-
-//   createControls();
-
 function el(tag, text) {
   function attrs(attrs = {}) {
     for (let key in attrs) {
@@ -163,6 +55,13 @@ const FIGHTERS = {
     },
   },
 };
+
+const HIT = {
+  head: 30,
+  body: 25,
+  foot: 20,
+};
+const ATTACK = ['head', 'body', 'foot'];
 
 function getRandom(range) {
   return Math.ceil(Math.random() * range);
@@ -226,8 +125,8 @@ function createPlayer(id, name) {
     return this._changeHP(damage)._renderHP();
   }
 
-  function hit(enemy, damage) {
-    return enemy.setDamage(damage);
+  function hit(enemy, attack) {
+    return enemy.setDamage(attack.damage);
   }
 
   const fighter = createFighter(name);
@@ -261,10 +160,9 @@ function createDeadMatch() {
   const playerTwo = createPlayer(2, getRandomFighter());
 
   const $arena = createArena(playerOne.$el, playerTwo.$el);
+  const $chat = document.querySelector('.chat');
   const $results = document.querySelector('.results');
-  const $fightBtn = document.querySelector('.btn.fight-btn');
-
-  $fightBtn.addEventListener('click', fight);
+  const $controller = document.querySelector('.controller');
 
   function getRandomFighter() {
     const fighters = Object.keys(FIGHTERS);
@@ -272,18 +170,74 @@ function createDeadMatch() {
     return fighters[getRandom(fighters.length) - 1];
   }
 
-  function randomHit(player, enemy) {
-    player.hit(enemy, getRandom(20));
+  $controller.addEventListener('submit', function (e) {
+    e.preventDefault();
+    fight();
+    $controller.reset();
+  });
+
+  function getEnemyAttack() {
+    const hit = ATTACK[getRandom(ATTACK.length) - 1];
+    const defence = ATTACK[getRandom(ATTACK.length) - 1];
+    const damage = getRandom(HIT[hit]);
+
+    return { hit, damage, defence };
+  }
+
+  function getPlayerAttack() {
+    const attack = {};
+
+    for (let i of $controller) {
+      if (i.checked && i.name === 'hit') {
+        attack.hit = i.value;
+        attack.damage = getRandom(HIT[i.value]);
+      }
+
+      if (i.checked && i.name === 'defence') {
+        attack.defence = i.value;
+      }
+    }
+
+    return attack;
   }
 
   function fight() {
-    randomHit(playerOne, playerTwo);
-    randomHit(playerTwo, playerOne);
+    const playerAttack = getPlayerAttack();
+    const enemyAttack = getEnemyAttack();
+
+    if (playerAttack.hit !== enemyAttack.defence) {
+      playerOne.hit(playerTwo, getPlayerAttack());
+      log(
+        `[attack] You hit ${playerTwo.name} to ${playerAttack.hit}. Damage ${playerAttack.damage}.`,
+        'success',
+      );
+    } else {
+      log(
+        `[attack] ${playerTwo.name} repulsed the attack to ${playerAttack.hit}.`,
+        'info',
+      );
+    }
+
+    if (enemyAttack.hit !== playerAttack.defence) {
+      playerTwo.hit(playerOne, getEnemyAttack());
+      log(
+        `[defence] ${playerTwo.name} hit you to ${enemyAttack.hit}. Damage ${enemyAttack.damage}.`,
+        'warning',
+      );
+    } else {
+      log(`[defence] You repulsed the attack to ${enemyAttack.hit}.`, 'info');
+    }
 
     if (playerOne.isLost() || playerTwo.isLost()) {
       congratulate(getWinner(playerOne, playerTwo));
       rematch();
     }
+  }
+
+  function log(text, level) {
+    const message = el('p', `${text}`).classes('message', level).$el;
+
+    $chat.prepend(message);
   }
 
   function congratulate({ name = '' }) {
@@ -295,10 +249,10 @@ function createDeadMatch() {
   }
 
   function rematch() {
-    $fightBtn.disabled = true;
-
+    $controller.remove();
     const $rematchBtn = el('button', 'rematch').classes('btn', 'rematch-btn')
       .$el;
+
     $rematchBtn.addEventListener('click', function () {
       window.location.reload();
     });
