@@ -202,17 +202,20 @@ body {
 
 .control {
   position: absolute;
-  width: 200px;
-  top: 25%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+  position: absolute;
+  bottom: 15%;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
   z-index: 1000;
+  width: 170px;
+  gap: 2rem;
 }
 
-.button {
+.btn {
   display: block;
   position: relative;
   padding: 0 16px;
@@ -222,16 +225,13 @@ body {
   text-transform: uppercase;
   background-color: #f5d100;
   border: none;
-  margin-top: 150px;
-  margin-left: auto;
-  margin-right: auto;
   border-radius: 4px;
   box-sizing: border-box;
   cursor: pointer;
   font-family: 'Mortal Kombat 3';
   outline: none;
 }
-.button::after {
+.btn::after {
   content: '';
   position: absolute;
   width: 100%;
@@ -242,22 +242,22 @@ body {
   border-radius: 4px;
   z-index: -1;
 }
-.button:hover {
+.btn:hover {
   background-color: #f5d100;
 }
-.button:active {
+.btn:active {
   top: 2px;
 }
-.button:active::after {
+.btn:active::after {
   top: 1px;
 }
 
-.button.punch-trigger:disabled {
+.btn.punch-btn:disabled {
   cursor: default;
   background-color: lightgrey;
 }
 
-.winnerTitle {
+.results {
   position: absolute;
   top: 25%;
   left: 50%;

@@ -3,10 +3,29 @@ const CHARACTERS = {
     weapon: ['fan'],
     animationDuration: {
       punch: 1500,
-      damage: 1500,
+      fall: 1500,
+    },
+  },
+  afro: {
+    weapon: [],
+    animationDuration: {
+      punch: 1000,
+      fall: 2500,
+    },
+  },
+  ladyBoy: {
+    weapon: [],
+    animationDuration: {
+      punch: 1000,
+      fall: 1250,
     },
   },
 };
+
+function getRandomCharacter() {
+  const chars = Object.keys(CHARACTERS);
+  return chars[Math.ceil(Math.random() * chars.length) - 1];
+}
 
 function createElement(element, ...classNames) {
   const $htmlElement = document.createElement(element);
@@ -15,120 +34,169 @@ function createElement(element, ...classNames) {
   return $htmlElement;
 }
 
-class Player {
-  animationDuration = null;
+function changeHP(damage) {
+  this.hp = Math.max(0, this.hp - damage);
+}
 
-  constructor(id, name) {
-    this.id = id;
-    this.name = name;
-    this.hp = 100;
-    this.props = CHARACTERS[this.name];
-    this.isWinner = false;
-    this.createElement();
-  }
+function elHP() {
+  return this.$lifeIndicator;
+}
 
-  createElement = () => {
-    this.$element = createElement('div', `player${this.id}`);
+function renderHP() {
+  this.elHP().style.width = `${this.hp}%`;
+}
 
-    this.createLifePanel();
-    this.createCharacterPlaceholder();
-    this.setSprite('pose');
-  };
-
-  createLifePanel = () => {
-    this.$lifePanel = createElement('div', 'progressbar');
-
+function createPlayer(id, name) {
+  function createLifePanel() {
     this.$lifeIndicator = createElement('div', 'life');
     this.$lifeIndicator.style.width = `${this.hp}%`;
-
     this.$characterName = createElement('div', 'name');
     this.$characterName.innerText = this.name;
 
-    this.$lifePanel.append(this.$lifeIndicator, this.$characterName);
-    this.$element.appendChild(this.$lifePanel);
-  };
+    const $container = createElement('div', 'progressbar');
+    $container.append(this.$lifeIndicator, this.$characterName);
 
-  createCharacterPlaceholder = () => {
-    this.$characterPlaceholder = createElement('div', 'character');
+    return $container;
+  }
+
+  function createCharacterPlaceholder() {
     this.$sprite = createElement('img', 'character-img');
-    this.$characterPlaceholder.appendChild(this.$sprite);
-    this.$element.appendChild(this.$characterPlaceholder);
-  };
 
-  do = (action) => {
+    const $container = createElement('div', 'character');
+    $container.appendChild(this.$sprite);
+
+    return $container;
+  }
+
+  function create() {
+    this.$element = createElement('div', `player${this.id}`);
+    this.$element.append(
+      this.createLifePanel(),
+      this.createCharacterPlaceholder(),
+    );
+    this.setSprite('pose');
+
+    return this;
+  }
+
+  function setSprite(action) {
     this.$sprite.setAttribute(
       'src',
       `./assets/fighters/${this.name}/${action}.gif`,
     );
-  };
+  }
 
-  setSprite = (action, fallbackSprite) => {
+  function doAction(action, fallbackAction) {
     clearTimeout(this.animationDuration);
-    this.do(action);
+    this.setSprite(action);
 
-    if (fallbackSprite) {
+    if (fallbackAction) {
       this.animationDuration = setTimeout(() => {
-        this.do(fallbackSprite);
+        this.setSprite(fallbackAction);
       }, CHARACTERS[this.name].animationDuration[action]);
     }
+  }
+
+  const player = {
+    id,
+    name,
+    hp: 100,
+    isLost: function () {
+      return this.hp === 0;
+    },
+    punch: function (enemy, damage) {
+      enemy.setDamage(damage);
+      enemy.isLost()
+        ? this.doAction('punch', 'win')
+        : this.doAction('punch', 'pose');
+    },
+    setDamage: function (damage) {
+      this.changeHP(damage);
+      this.renderHP();
+      this.isLost()
+        ? this.doAction('fall', 'lose')
+        : this.doAction('fall', 'pose');
+    },
+    elHP,
+    changeHP,
+    renderHP,
+    create,
+    createLifePanel,
+    createCharacterPlaceholder,
+    doAction,
+    setSprite,
+    ...CHARACTERS[name],
   };
 
-  isLost = () => this.hp === 0;
-
-  damage = (damage) => {
-    this.hp = Math.max(0, this.hp - damage);
-    this.$lifeIndicator.style.width = `${this.hp}%`;
-
-    this.isLost()
-      ? this.setSprite('damage', 'lose')
-      : this.setSprite('damage', 'pose');
-  };
-
-  punch = (enemy) => {
-    enemy.damage(Math.ceil(Math.random() * 20));
-
-    enemy.isLost()
-      ? this.setSprite('punch', 'win')
-      : this.setSprite('punch', 'pose');
-  };
+  return player.create();
 }
 
-class Arena {
-  constructor(players) {
-    this.$element = document.querySelector('.arenas');
-    this.players = players;
-    this.players.forEach((player) => {
-      this.$element.appendChild(player.$element);
-    });
+function createArena(playerOne, playerTwo) {
+  function shufflePlayers(players) {
+    return players.sort(() => Math.random() - 0.5);
   }
 
-  congratulate(winnerName) {
-    const $congratulationTitle = createElement('div', 'winnerTitle');
-    $congratulationTitle.innerText = `${winnerName} wins`;
-    this.$element.appendChild($congratulationTitle);
-  }
-}
-
-class Game {
-  constructor(players) {
-    this.arena = new Arena(players);
-    this.$punchTrigger = document.querySelector('.punch-trigger');
-    this.$punchTrigger.addEventListener('click', this.luckyPunch);
+  function getRandomDamage() {
+    return Math.ceil(Math.random() * 20);
   }
 
-  randomize = () => {
-    return this.arena.players.sort(() => Math.random() - 0.5);
-  };
+  function randomPunch() {
+    const [punisher, enemy] = shufflePlayers([playerOne, playerTwo]);
 
-  luckyPunch = () => {
-    const [punisher, enemy] = this.randomize();
-    punisher.punch(enemy);
+    punisher.punch(enemy, getRandomDamage());
 
-    if (enemy.hp === 0) {
-      this.$punchTrigger.disabled = true;
-      this.arena.congratulate(punisher.name);
+    if (enemy.isLost()) {
+      finishHim(punisher);
     }
-  };
+  }
+
+  function finishHim(winner) {
+    showResults(winner);
+  }
+
+  function showResults(winner) {
+    const $results = document.querySelector('.results');
+
+    $results.innerText = winner ? `${winner.name} wins` : `Draw`;
+    hideControl('restart', false);
+    disableControl('punch', true);
+  }
+
+  function createControls() {
+    const $restartBtn = createElement('button', 'btn', 'restart-btn');
+    $restartBtn.innerText = 'restart';
+    $restartBtn.style.visibility = 'hidden';
+    $restartBtn.addEventListener('click', function () {
+      location.reload();
+    });
+
+    const $punchBtn = createElement('button', 'btn', 'punch-btn');
+    $punchBtn.innerText = 'lucky punch';
+    $punchBtn.addEventListener('click', randomPunch);
+
+    document.querySelector('.control').append($punchBtn, $restartBtn);
+  }
+
+  function hideControl(name, state) {
+    const $control = document.querySelector(`.btn.${name}-btn`);
+
+    $control.style.visibility = state ? 'hidden' : 'visible';
+  }
+
+  function disableControl(name, state) {
+    const $control = document.querySelector(`.btn.${name}-btn`);
+
+    $control.disabled = state;
+  }
+
+  createControls();
+
+  document
+    .querySelector('.arenas')
+    .append(playerOne.$element, playerTwo.$element);
 }
 
-const game = new Game([new Player(1, 'anfisa'), new Player(2, 'anfisa')]);
+const arena = createArena(
+  createPlayer(1, getRandomCharacter()),
+  createPlayer(2, getRandomCharacter()),
+);
