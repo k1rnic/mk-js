@@ -1,4 +1,38 @@
-const CHARACTERS = {
+function el(tag, text) {
+  function attrs(attrs = {}) {
+    for (let key in attrs) {
+      this.$el.setAttribute(key, attrs[key]);
+    }
+    return this;
+  }
+
+  function styles(styles) {
+    if (styles) {
+      Object.assign(this.$el.style, styles);
+    }
+    return this;
+  }
+
+  function classes(...cn) {
+    this.$el.classList.add(...cn);
+    return this;
+  }
+
+  function children(...children) {
+    this.$el.append(...children);
+    return this;
+  }
+
+  const $el = document.createElement(tag);
+
+  if (text) {
+    $el.innerText = text;
+  }
+
+  return { $el, classes, attrs, styles, children };
+}
+
+const FIGHTERS = {
   anfisa: {
     weapon: ['fan'],
     animationDuration: {
@@ -22,181 +56,232 @@ const CHARACTERS = {
   },
 };
 
-function getRandomCharacter() {
-  const chars = Object.keys(CHARACTERS);
-  return chars[Math.ceil(Math.random() * chars.length) - 1];
+const HIT = {
+  head: 30,
+  body: 25,
+  foot: 20,
+};
+const ATTACK = ['head', 'body', 'foot'];
+
+function getRandom(range) {
+  return Math.ceil(Math.random() * range);
 }
 
-function createElement(element, ...classNames) {
-  const $htmlElement = document.createElement(element);
-  $htmlElement.classList.add(...classNames);
-
-  return $htmlElement;
-}
-
-function changeHP(damage) {
-  this.hp = Math.max(0, this.hp - damage);
-}
-
-function elHP() {
-  return this.$lifeIndicator;
-}
-
-function renderHP() {
-  this.elHP().style.width = `${this.hp}%`;
+function createFighter(name) {
+  return {
+    name,
+    hp: 100,
+    ...FIGHTERS[name],
+  };
 }
 
 function createPlayer(id, name) {
-  function createLifePanel() {
-    this.$lifeIndicator = createElement('div', 'life');
-    this.$lifeIndicator.style.width = `${this.hp}%`;
-    this.$characterName = createElement('div', 'name');
-    this.$characterName.innerText = this.name;
+  function _createLifeIndicator() {
+    this.$lifeIndicator = el('div').classes('life');
+    this.$namePlaceholder = el('div', this.name).classes('name');
 
-    const $container = createElement('div', 'progressbar');
-    $container.append(this.$lifeIndicator, this.$characterName);
-
-    return $container;
+    return el('div')
+      .classes('progressbar')
+      .children(this.$lifeIndicator.$el, this.$namePlaceholder.$el).$el;
   }
 
-  function createCharacterPlaceholder() {
-    this.$sprite = createElement('img', 'character-img');
+  function _createFighterPlaceholder() {
+    this.$sprite = el('img').classes('character-img');
 
-    const $container = createElement('div', 'character');
-    $container.appendChild(this.$sprite);
-
-    return $container;
+    return el('div').classes('character').children(this.$sprite.$el).$el;
   }
 
-  function create() {
-    this.$element = createElement('div', `player${this.id}`);
-    this.$element.append(
-      this.createLifePanel(),
-      this.createCharacterPlaceholder(),
-    );
-    this.setSprite('pose');
+  function _render() {
+    this.$el = el('div')
+      .classes(`player${this.id}`)
+      .children(
+        this._createLifeIndicator(),
+        this._createFighterPlaceholder(),
+      ).$el;
+
+    return this._renderHP()._renderFighter();
+  }
+
+  function _renderHP() {
+    this.$lifeIndicator.styles({ width: `${this.hp}%` });
+    return this;
+  }
+
+  function _renderFighter(sprite = 'pose', fallbackSprite = '') {
+    clearTimeout(this._animating);
+    this.$sprite.attrs({ src: `./assets/fighters/${this.name}/${sprite}.gif` });
+
+    if (fallbackSprite) {
+      this._animating = setTimeout(() => {
+        this.$sprite.attrs({
+          src: `./assets/fighters/${this.name}/${fallbackSprite}.gif`,
+        });
+      }, FIGHTERS[this.name].animationDuration[sprite]);
+    }
 
     return this;
   }
 
-  function setSprite(action) {
-    this.$sprite.setAttribute(
-      'src',
-      `./assets/fighters/${this.name}/${action}.gif`,
-    );
+  function _changeHP(damage) {
+    this.hp = Math.max(0, this.hp - damage);
+    return this;
   }
 
-  function doAction(action, fallbackAction) {
-    clearTimeout(this.animationDuration);
-    this.setSprite(action);
-
-    if (fallbackAction) {
-      this.animationDuration = setTimeout(() => {
-        this.setSprite(fallbackAction);
-      }, CHARACTERS[this.name].animationDuration[action]);
-    }
+  function isLost() {
+    return this.hp === 0;
   }
+
+  function setDamage(damage) {
+    this._changeHP(damage)._renderHP();
+
+    this.isLost()
+      ? this._renderFighter('fall', 'lose')
+      : this._renderFighter('fall', 'pose');
+  }
+
+  function hit(enemy, attack) {
+    enemy.setDamage(attack.damage);
+
+    enemy.isLost()
+      ? this._renderFighter('punch', 'win')
+      : this._renderFighter('punch', 'pose');
+  }
+
+  const fighter = createFighter(name);
 
   const player = {
     id,
-    name,
-    hp: 100,
-    isLost: function () {
-      return this.hp === 0;
-    },
-    punch: function (enemy, damage) {
-      enemy.setDamage(damage);
-      enemy.isLost()
-        ? this.doAction('punch', 'win')
-        : this.doAction('punch', 'pose');
-    },
-    setDamage: function (damage) {
-      this.changeHP(damage);
-      this.renderHP();
-      this.isLost()
-        ? this.doAction('fall', 'lose')
-        : this.doAction('fall', 'pose');
-    },
-    elHP,
-    changeHP,
-    renderHP,
-    create,
-    createLifePanel,
-    createCharacterPlaceholder,
-    doAction,
-    setSprite,
-    ...CHARACTERS[name],
+    isLost,
+    hit,
+    setDamage,
+    _render,
+    _renderHP,
+    _renderFighter,
+    _createLifeIndicator,
+    _createFighterPlaceholder,
+    _changeHP,
+    _animating: false,
+    ...fighter,
   };
 
-  return player.create();
+  return player._render();
 }
 
 function createArena(playerOne, playerTwo) {
-  function shufflePlayers(players) {
-    return players.sort(() => Math.random() - 0.5);
+  const $arena = document.querySelector('.arenas');
+  $arena.append(playerOne, playerTwo);
+
+  return $arena;
+}
+
+function createDeadMatch() {
+  const playerOne = createPlayer(1, getRandomFighter());
+  const playerTwo = createPlayer(2, getRandomFighter());
+
+  const $arena = createArena(playerOne.$el, playerTwo.$el);
+  const $chat = document.querySelector('.chat');
+  const $results = document.querySelector('.results');
+  const $controller = document.querySelector('.controller');
+
+  function getRandomFighter() {
+    const fighters = Object.keys(FIGHTERS);
+
+    return fighters[getRandom(fighters.length) - 1];
   }
 
-  function getRandomDamage() {
-    return Math.ceil(Math.random() * 20);
+  $controller.addEventListener('submit', function (e) {
+    e.preventDefault();
+    fight();
+    $controller.reset();
+  });
+
+  function getEnemyAttack() {
+    const hit = ATTACK[getRandom(ATTACK.length) - 1];
+    const defence = ATTACK[getRandom(ATTACK.length) - 1];
+    const damage = getRandom(HIT[hit]);
+
+    return { hit, damage, defence };
   }
 
-  function randomPunch() {
-    const [punisher, enemy] = shufflePlayers([playerOne, playerTwo]);
+  function getPlayerAttack() {
+    const attack = {};
 
-    punisher.punch(enemy, getRandomDamage());
+    for (let i of $controller) {
+      if (i.checked && i.name === 'hit') {
+        attack.hit = i.value;
+        attack.damage = getRandom(HIT[i.value]);
+      }
 
-    if (enemy.isLost()) {
-      finishHim(punisher);
+      if (i.checked && i.name === 'defence') {
+        attack.defence = i.value;
+      }
+    }
+
+    return attack;
+  }
+
+  function fight() {
+    const playerAttack = getPlayerAttack();
+    const enemyAttack = getEnemyAttack();
+
+    if (playerAttack.hit !== enemyAttack.defence) {
+      playerOne.hit(playerTwo, getPlayerAttack());
+      log(
+        `[attack] You hit ${playerTwo.name} to ${playerAttack.hit}. Damage ${playerAttack.damage}.`,
+        'success',
+      );
+    } else {
+      log(
+        `[attack] ${playerTwo.name} repulsed the attack to ${playerAttack.hit}.`,
+        'info',
+      );
+    }
+
+    if (enemyAttack.hit !== playerAttack.defence) {
+      playerTwo.hit(playerOne, getEnemyAttack());
+      log(
+        `[defence] ${playerTwo.name} hit you to ${enemyAttack.hit}. Damage ${enemyAttack.damage}.`,
+        'warning',
+      );
+    } else {
+      log(`[defence] You repulsed the attack to ${enemyAttack.hit}.`, 'info');
+    }
+
+    if (playerOne.isLost() || playerTwo.isLost()) {
+      congratulate(getWinner(playerOne, playerTwo));
+      rematch();
     }
   }
 
-  function finishHim(winner) {
-    showResults(winner);
+  function log(text, level) {
+    const message = el('p', `${text}`).classes('message', level).$el;
+
+    $chat.prepend(message);
   }
 
-  function showResults(winner) {
-    const $results = document.querySelector('.results');
-
-    $results.innerText = winner ? `${winner.name} wins` : `Draw`;
-    hideControl('restart', false);
-    disableControl('punch', true);
+  function congratulate({ name = '' }) {
+    $results.innerText = name ? `${name} wins` : `Draw`;
   }
 
-  function createControls() {
-    const $restartBtn = createElement('button', 'btn', 'restart-btn');
-    $restartBtn.innerText = 'restart';
-    $restartBtn.style.visibility = 'hidden';
-    $restartBtn.addEventListener('click', function () {
-      location.reload();
+  function getWinner(playerOne, playerTwo) {
+    return playerOne.isLost() ? playerTwo : playerOne;
+  }
+
+  function rematch() {
+    $controller.remove();
+    const $rematchBtn = el('button', 'rematch').classes('btn', 'rematch-btn')
+      .$el;
+
+    $rematchBtn.addEventListener('click', function () {
+      window.location.reload();
     });
 
-    const $punchBtn = createElement('button', 'btn', 'punch-btn');
-    $punchBtn.innerText = 'lucky punch';
-    $punchBtn.addEventListener('click', randomPunch);
+    const $rematchBtnContainer = el('div')
+      .classes('reloadWrap')
+      .children($rematchBtn).$el;
 
-    document.querySelector('.control').append($punchBtn, $restartBtn);
+    $arena.append($rematchBtnContainer);
   }
-
-  function hideControl(name, state) {
-    const $control = document.querySelector(`.btn.${name}-btn`);
-
-    $control.style.visibility = state ? 'hidden' : 'visible';
-  }
-
-  function disableControl(name, state) {
-    const $control = document.querySelector(`.btn.${name}-btn`);
-
-    $control.disabled = state;
-  }
-
-  createControls();
-
-  document
-    .querySelector('.arenas')
-    .append(playerOne.$element, playerTwo.$element);
 }
 
-const arena = createArena(
-  createPlayer(1, getRandomCharacter()),
-  createPlayer(2, getRandomCharacter()),
-);
+const deadMatch = createDeadMatch();
