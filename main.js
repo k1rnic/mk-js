@@ -325,7 +325,16 @@ function createDeadMatch() {
     }
 
     if (playerOne.isLost() || playerTwo.isLost()) {
-      congratulate(getWinner(playerOne, playerTwo));
+      const winner = getWinner(playerOne, playerTwo);
+
+      congratulate(winner);
+
+      if (playerOne.isLost()) {
+        logger.log('end', 'info', playerTwo, playerOne);
+      } else if (playerTwo.isLost()) {
+        logger.log('end', 'info', playerOne, playerTwo);
+      }
+
       rematch();
     }
   }
