@@ -40,6 +40,7 @@ const LOGS = {
       playerTwo.name
     } бросили вызов друг другу.`,
   ],
+  draw: () => [`Ничья`],
   end: (winner, looser) => [
     `Результат удара ${winner.name}: ${looser.name} - труп`,
     `${looser.name} погиб от удара бойца ${winner.name}`,
@@ -156,6 +157,8 @@ function createPlayer(id, name) {
   function _renderFighter(sprite = 'pose', fallbackSprite = '') {
     clearTimeout(this._animating);
     this.$sprite.attrs({ src: `./assets/fighters/${this.name}/${sprite}.gif` });
+
+    console.log(sprite, fallbackSprite);
 
     if (fallbackSprite) {
       this._animating = setTimeout(() => {
@@ -313,7 +316,9 @@ function createDeadMatch() {
 
       congratulate(winner);
 
-      if (playerOne.isLost()) {
+      if (playerOne.isLost() && playerTwo.isLost()) {
+        logger.log('draw', 'info');
+      } else if (playerOne.isLost()) {
         logger.log('end', 'info', playerTwo, playerOne);
       } else if (playerTwo.isLost()) {
         logger.log('end', 'info', playerOne, playerTwo);
@@ -328,7 +333,13 @@ function createDeadMatch() {
   }
 
   function getWinner(playerOne, playerTwo) {
-    return playerOne.isLost() ? playerTwo : playerOne;
+    if (playerOne.isLost()) {
+      return playerTwo;
+    } else if (playerTwo.isLost()) {
+      return playerOne;
+    }
+
+    return null;
   }
 
   function rematch() {
