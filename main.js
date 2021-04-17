@@ -32,6 +32,52 @@ function el(tag, text) {
   return { $el, classes, attrs, styles, children };
 }
 
+const LOGS = {
+  start: (playerOne, playerTwo) => [
+    `Часы показывали ${new Date().getHours()}:${(
+      '0' + new Date().getMinutes()
+    ).slice(-2)}, когда ${playerOne.name} и ${
+      playerTwo.name
+    } бросили вызов друг другу.`,
+  ],
+  end: (winner, looser) => [
+    `Результат удара ${winner.name}: ${looser.name} - труп`,
+    `${looser.name} погиб от удара бойца ${winner.name}`,
+    `Результат боя: ${looser.name} - жертва, ${winner.name} - убийца`,
+  ],
+  hit: (puncher, defender) => [
+    `${defender.name} пытался сконцентрироваться, но ${puncher.name} разбежавшись раздробил копчиком левое ухо врага. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} расстроился, как вдруг, неожиданно ${puncher.name} случайно раздробил грудью грудину противника. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} зажмурился, а в это время ${puncher.name}, прослезившись, раздробил кулаком пах оппонента. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} чесал <вырезано цензурой>, и внезапно неустрашимый ${puncher.name} отчаянно размозжил грудью левый бицепс оппонента. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} задумался, но внезапно ${puncher.name} случайно влепил грубый удар копчиком в пояс оппонента. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} ковырялся в зубах, но ${puncher.name} проснувшись влепил тяжелый удар пальцем в кадык врага. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} вспомнил что-то важное, но внезапно ${puncher.name} зевнув, размозжил открытой ладонью челюсть противника. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} осмотрелся, и в это время ${puncher.name} мимоходом раздробил стопой аппендикс соперника. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} кашлянул, но внезапно ${puncher.name} показав палец, размозжил пальцем грудь соперника. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} пытался что-то сказать, а жестокий ${puncher.name} проснувшись размозжил копчиком левую ногу противника. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} забылся, как внезапно безумный ${puncher.name} со скуки, влепил удар коленом в левый бок соперника. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} поперхнулся, а за это ${puncher.name} мимоходом раздробил коленом висок врага. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} расстроился, а в это время наглый ${puncher.name} пошатнувшись размозжил копчиком губы оппонента. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} осмотрелся, но внезапно ${puncher.name} робко размозжил коленом левый глаз противника. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} осмотрелся, а ${puncher.name} вломил дробящий удар плечом, пробив блок, куда обычно не бьют оппонента. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} ковырялся в зубах, как вдруг, неожиданно ${puncher.name} отчаянно размозжил плечом мышцы пресса оппонента. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} пришел в себя, и в это время ${puncher.name} провел разбивающий удар кистью руки, пробив блок, в голень противника. -${puncher.damage} [${defender.hp}/100]`,
+    `${defender.name} пошатнулся, а в это время ${puncher.name} хихикая влепил грубый удар открытой ладонью по бедрам врага. -${puncher.damage} [${defender.hp}/100]`,
+  ],
+  defence: (puncher, defender) => [
+    `${puncher.name} потерял момент и храбрый ${defender.name} отпрыгнул от удара открытой ладонью в ключицу.`,
+    `${puncher.name} не контролировал ситуацию, и потому ${defender.name} поставил блок на удар пяткой в правую грудь.`,
+    `${puncher.name} потерял момент и ${defender.name} поставил блок на удар коленом по селезенке.`,
+    `${puncher.name} поскользнулся и задумчивый ${defender.name} поставил блок на тычок головой в бровь.`,
+    `${puncher.name} старался провести удар, но непобедимый ${defender.name} ушел в сторону от удара копчиком прямо в пятку.`,
+    `${puncher.name} обманулся и жестокий ${defender.name} блокировал удар стопой в солнечное сплетение.`,
+    `${puncher.name} не думал о бое, потому расстроенный ${defender.name} отпрыгнул от удара кулаком куда обычно не бьют.`,
+    `${puncher.name} обманулся и жестокий ${defender.name} блокировал удар стопой в солнечное сплетение.`,
+  ],
+  draw: () => 'Ничья - это тоже победа!',
+};
+
 const FIGHTERS = {
   anfisa: {
     weapon: ['fan'],
@@ -174,14 +220,38 @@ function createArena(playerOne, playerTwo) {
   return $arena;
 }
 
+function createLogger() {
+  const $chat = document.querySelector('.chat');
+
+  function getRandomLogByType(type, ...args) {
+    const logsByType = LOGS[type](...args);
+    return logsByType[getRandom(logsByType.length - 1)];
+  }
+
+  function log(type, level, ...args) {
+    const date = new Date();
+    const time = `${date.getHours()}:${('0' + date.getMinutes()).slice(-2)}`;
+    const text = getRandomLogByType(type, ...args);
+
+    const message = el('p', `[${time}] ${text}`).classes('message', level).$el;
+
+    $chat.prepend(message);
+  }
+
+  return { log };
+}
+
 function createDeadMatch() {
   const playerOne = createPlayer(1, getRandomFighter());
   const playerTwo = createPlayer(2, getRandomFighter());
 
   const $arena = createArena(playerOne.$el, playerTwo.$el);
-  const $chat = document.querySelector('.chat');
   const $results = document.querySelector('.results');
   const $controller = document.querySelector('.controller');
+
+  const logger = createLogger();
+
+  logger.log('start', 'info', playerOne, playerTwo);
 
   function getRandomFighter() {
     const fighters = Object.keys(FIGHTERS);
@@ -225,38 +295,39 @@ function createDeadMatch() {
     const enemyAttack = getEnemyAttack();
 
     if (playerAttack.hit !== enemyAttack.defence) {
-      playerOne.hit(playerTwo, getPlayerAttack());
-      log(
-        `[attack] You hit ${playerTwo.name} to ${playerAttack.hit}. Damage ${playerAttack.damage}.`,
+      playerOne.hit(playerTwo, playerAttack);
+      logger.log(
+        'hit',
         'success',
+        {
+          name: playerOne.name,
+          ...playerAttack,
+        },
+        playerTwo,
       );
     } else {
-      log(
-        `[attack] ${playerTwo.name} repulsed the attack to ${playerAttack.hit}.`,
-        'info',
-      );
+      logger.log('defence', 'info', playerOne, playerTwo);
     }
 
     if (enemyAttack.hit !== playerAttack.defence) {
-      playerTwo.hit(playerOne, getEnemyAttack());
-      log(
-        `[defence] ${playerTwo.name} hit you to ${enemyAttack.hit}. Damage ${enemyAttack.damage}.`,
+      playerTwo.hit(playerOne, enemyAttack);
+      logger.log(
+        'hit',
         'warning',
+        {
+          name: playerTwo.name,
+          ...enemyAttack,
+        },
+        playerOne,
       );
     } else {
-      log(`[defence] You repulsed the attack to ${enemyAttack.hit}.`, 'info');
+      logger.log('defence', 'info', playerTwo, playerOne);
     }
 
     if (playerOne.isLost() || playerTwo.isLost()) {
       congratulate(getWinner(playerOne, playerTwo));
       rematch();
     }
-  }
-
-  function log(text, level) {
-    const message = el('p', `${text}`).classes('message', level).$el;
-
-    $chat.prepend(message);
   }
 
   function congratulate({ name = '' }) {
