@@ -45,25 +45,25 @@ const LOGS = {
     `${looser.name} погиб от удара бойца ${winner.name}`,
     `Результат боя: ${looser.name} - жертва, ${winner.name} - убийца`,
   ],
-  hit: (puncher, defender) => [
-    `${defender.name} пытался сконцентрироваться, но ${puncher.name} разбежавшись раздробил копчиком левое ухо врага. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} расстроился, как вдруг, неожиданно ${puncher.name} случайно раздробил грудью грудину противника. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} зажмурился, а в это время ${puncher.name}, прослезившись, раздробил кулаком пах оппонента. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} чесал <вырезано цензурой>, и внезапно неустрашимый ${puncher.name} отчаянно размозжил грудью левый бицепс оппонента. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} задумался, но внезапно ${puncher.name} случайно влепил грубый удар копчиком в пояс оппонента. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} ковырялся в зубах, но ${puncher.name} проснувшись влепил тяжелый удар пальцем в кадык врага. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} вспомнил что-то важное, но внезапно ${puncher.name} зевнув, размозжил открытой ладонью челюсть противника. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} осмотрелся, и в это время ${puncher.name} мимоходом раздробил стопой аппендикс соперника. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} кашлянул, но внезапно ${puncher.name} показав палец, размозжил пальцем грудь соперника. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} пытался что-то сказать, а жестокий ${puncher.name} проснувшись размозжил копчиком левую ногу противника. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} забылся, как внезапно безумный ${puncher.name} со скуки, влепил удар коленом в левый бок соперника. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} поперхнулся, а за это ${puncher.name} мимоходом раздробил коленом висок врага. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} расстроился, а в это время наглый ${puncher.name} пошатнувшись размозжил копчиком губы оппонента. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} осмотрелся, но внезапно ${puncher.name} робко размозжил коленом левый глаз противника. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} осмотрелся, а ${puncher.name} вломил дробящий удар плечом, пробив блок, куда обычно не бьют оппонента. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} ковырялся в зубах, как вдруг, неожиданно ${puncher.name} отчаянно размозжил плечом мышцы пресса оппонента. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} пришел в себя, и в это время ${puncher.name} провел разбивающий удар кистью руки, пробив блок, в голень противника. -${puncher.damage} [${defender.hp}/100]`,
-    `${defender.name} пошатнулся, а в это время ${puncher.name} хихикая влепил грубый удар открытой ладонью по бедрам врага. -${puncher.damage} [${defender.hp}/100]`,
+  hit: (puncher, defender, attack) => [
+    `${defender.name} пытался сконцентрироваться, но ${puncher.name} разбежавшись раздробил копчиком левое ухо врага. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} расстроился, как вдруг, неожиданно ${puncher.name} случайно раздробил грудью грудину противника. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} зажмурился, а в это время ${puncher.name}, прослезившись, раздробил кулаком пах оппонента. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} чесал <вырезано цензурой>, и внезапно неустрашимый ${puncher.name} отчаянно размозжил грудью левый бицепс оппонента. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} задумался, но внезапно ${puncher.name} случайно влепил грубый удар копчиком в пояс оппонента. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} ковырялся в зубах, но ${puncher.name} проснувшись влепил тяжелый удар пальцем в кадык врага. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} вспомнил что-то важное, но внезапно ${puncher.name} зевнув, размозжил открытой ладонью челюсть противника. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} осмотрелся, и в это время ${puncher.name} мимоходом раздробил стопой аппендикс соперника. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} кашлянул, но внезапно ${puncher.name} показав палец, размозжил пальцем грудь соперника. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} пытался что-то сказать, а жестокий ${puncher.name} проснувшись размозжил копчиком левую ногу противника. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} забылся, как внезапно безумный ${puncher.name} со скуки, влепил удар коленом в левый бок соперника. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} поперхнулся, а за это ${puncher.name} мимоходом раздробил коленом висок врага. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} расстроился, а в это время наглый ${puncher.name} пошатнувшись размозжил копчиком губы оппонента. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} осмотрелся, но внезапно ${puncher.name} робко размозжил коленом левый глаз противника. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} осмотрелся, а ${puncher.name} вломил дробящий удар плечом, пробив блок, куда обычно не бьют оппонента. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} ковырялся в зубах, как вдруг, неожиданно ${puncher.name} отчаянно размозжил плечом мышцы пресса оппонента. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} пришел в себя, и в это время ${puncher.name} провел разбивающий удар кистью руки, пробив блок, в голень противника. -${attack.damage} [${defender.hp}/100]`,
+    `${defender.name} пошатнулся, а в это время ${puncher.name} хихикая влепил грубый удар открытой ладонью по бедрам врага. -${attack.damage} [${defender.hp}/100]`,
   ],
   defence: (puncher, defender) => [
     `${puncher.name} потерял момент и храбрый ${defender.name} отпрыгнул от удара открытой ладонью в ключицу.`,
@@ -296,30 +296,14 @@ function createDeadMatch() {
 
     if (playerAttack.hit !== enemyAttack.defence) {
       playerOne.hit(playerTwo, playerAttack);
-      logger.log(
-        'hit',
-        'success',
-        {
-          name: playerOne.name,
-          ...playerAttack,
-        },
-        playerTwo,
-      );
+      logger.log('hit', 'success', playerOne, playerTwo, playerAttack);
     } else {
       logger.log('defence', 'info', playerOne, playerTwo);
     }
 
     if (enemyAttack.hit !== playerAttack.defence) {
       playerTwo.hit(playerOne, enemyAttack);
-      logger.log(
-        'hit',
-        'warning',
-        {
-          name: playerTwo.name,
-          ...enemyAttack,
-        },
-        playerOne,
-      );
+      logger.log('hit', 'warning', playerTwo, playerOne, enemyAttack);
     } else {
       logger.log('defence', 'info', playerTwo, playerOne);
     }
