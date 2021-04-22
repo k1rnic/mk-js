@@ -1,2 +1,4 @@
-export const getRandom = (range) => Math.ceil(Math.random() * range);
-export const getTime = () => new Date().toLocaleTimeString();
+export default class Utils {
+  static getRandom = (range) => Math.ceil(Math.random() * range);
+  static getTime = () => new Date().toLocaleTimeString();
+}

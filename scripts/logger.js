@@ -1,12 +1,13 @@
 import LOGS from '../data/logs.js';
 import Component from './component.js';
-import { getRandom, getTime } from './utils.js';
+import Utils from './utils.js';
+
 export default class Logger {
   static #component = document.querySelector('.chat');
 
   static start = ({ fighter: fighterOne }, { fighter: fighterTwo }) => {
     const text = this.#getLog('start')
-      .replace('{time}', getTime())
+      .replace('{time}', Utils.getTime())
       .replace('{playerOne}', fighterOne.name)
       .replace('{playerTwo}', fighterTwo.name);
 
@@ -51,7 +52,7 @@ export default class Logger {
     switch (type) {
       case 'defence':
       case 'hit':
-        return `[${getTime()}] ${text}`;
+        return `[${Utils.getTime()}] ${text}`;
       default:
         return text;
     }
@@ -59,7 +60,7 @@ export default class Logger {
 
   static #getRandomLogByType = (type) => {
     const log = LOGS[type];
-    return log[getRandom(log.length - 1)];
+    return log[Utils.getRandom(log.length - 1)];
   };
 
   static #log = (text, level) => {

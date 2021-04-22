@@ -1,5 +1,5 @@
 import FIGHTERS from '../data/fighters.js';
-import { getRandom } from './utils.js';
+import Utils from './utils.js';
 export class Fighter {
   static fighterNames = Object.keys(FIGHTERS);
 
@@ -29,20 +29,20 @@ export class Fighter {
     return hit === defence;
   };
 
-  getRandomDamage = (attack) => getRandom(this.attack[attack]);
+  getRandomDamage = (attack) => Utils.getRandom(this.attack[attack]);
 }
 
 export class RandomFighter extends Fighter {
   constructor() {
     const name =
-      Fighter.fighterNames[getRandom(Fighter.fighterNames.length) - 1];
+      Fighter.fighterNames[Utils.getRandom(Fighter.fighterNames.length) - 1];
     super(name);
   }
 
   static getRandomAttack = (name) => {
     const attackList = Object.keys(FIGHTERS[name].attack);
-    const hit = attackList[getRandom(attackList.length) - 1];
-    const defence = attackList[getRandom(attackList.length) - 1];
+    const hit = attackList[Utils.getRandom(attackList.length) - 1];
+    const defence = attackList[Utils.getRandom(attackList.length) - 1];
 
     return { hit, defence };
   };
