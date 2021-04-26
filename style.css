@@ -293,7 +293,7 @@ body {
   margin-top: 0;
 }
 
-.controller {
+.controller .fight-ctrl {
   position: absolute;
   width: 200px;
   top: 30%;
@@ -307,7 +307,7 @@ body {
   z-index: 1000;
 }
 
-.controller:invalid .fight-btn {
+.controller .fight-ctrl:invalid .fight-btn {
   pointer-events: none;
   background-color: red;
 }

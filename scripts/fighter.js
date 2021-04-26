@@ -1,45 +1,49 @@
-import { getRandom } from './utils.js';
+import FIGHTERS from '../data/fighters.js';
+import Utils from './utils.js';
+export class Fighter {
+  static fighterNames = Object.keys(FIGHTERS);
 
-export const FIGHTERS = {
-  anfisa: {
-    weapon: ['fan'],
-  },
-  afro: {
-    weapon: [],
-  },
-  ladyBoy: {
-    weapon: [],
-  },
-};
+  #sprite;
 
-const FIGHTER_NAMES = Object.keys(FIGHTERS);
+  constructor(name) {
+    this.name = name;
+    this.hp = 100;
+    this.weapon = FIGHTERS[name]?.weapon;
+    this.attack = FIGHTERS[name]?.attack;
+    this.sprite = 'pose';
+  }
 
-const HIT = {
-  head: 30,
-  body: 25,
-  foot: 20,
-};
+  get sprite() {
+    return this.#sprite;
+  }
 
-const ATTACK = Object.keys(HIT);
+  set sprite(sprite) {
+    this.#sprite = `./assets/fighters/${this.name}/${sprite}.gif`;
+  }
 
-export const getFighterByName = (name) => ({
-  name,
-  hp: 100,
-  ...FIGHTERS[name],
-});
+  defend = ({ hit, damage }, defence) => {
+    if (hit !== defence) {
+      this.hp = Math.max(0, this.hp - damage);
+    }
 
-export const getRandomFighter = () => {
-  const name = FIGHTER_NAMES[getRandom(FIGHTER_NAMES.length) - 1];
+    return hit === defence;
+  };
 
-  return getFighterByName(name);
-};
+  getRandomDamage = (attack) => Utils.getRandom(this.attack[attack]);
+}
 
-export const getRandomAttack = () => {
-  const hit = ATTACK[getRandom(ATTACK.length) - 1];
-  const defence = ATTACK[getRandom(ATTACK.length) - 1];
-  const damage = getRandom(HIT[hit]);
+export class RandomFighter extends Fighter {
+  constructor() {
+    const name =
+      Fighter.fighterNames[Utils.getRandom(Fighter.fighterNames.length) - 1];
+    super(name);
+  }
 
-  return { hit, damage, defence };
-};
+  static getRandomAttack = (name) => {
+    const attackList = Object.keys(FIGHTERS[name].attack);
+    const hit = attackList[Utils.getRandom(attackList.length) - 1];
+    const defence = attackList[Utils.getRandom(attackList.length) - 1];
 
-export const getRandomDamage = (hit) => getRandom(HIT[hit]);
+    return { hit, defence };
+  };
+}

@@ -1,33 +1,37 @@
-export default function (tag, text) {
-  this.$el = document.createElement(tag);
+export default class Component {
+  #component;
 
-  if (text) {
-    this.$el.innerText = text;
+  constructor(tag, text) {
+    this.#component = document.createElement(tag);
+
+    if (text) {
+      this.#component.innerText = text;
+    }
   }
 
-  this.get = () => this.$el;
+  get = () => this.#component;
 
-  this.attrs = (attrs = {}) => {
+  attrs = (attrs = {}) => {
     for (let key in attrs) {
-      this.$el.setAttribute(key, attrs[key]);
+      this.#component.setAttribute(key, attrs[key]);
     }
     return this;
   };
 
-  this.styles = (styles) => {
+  styles = (styles) => {
     if (styles) {
-      Object.assign(this.$el.style, styles);
+      Object.assign(this.#component.style, styles);
     }
     return this;
   };
 
-  this.classes = (...cn) => {
-    this.$el.classList.add(...cn);
+  classes = (...cn) => {
+    this.#component.classList.add(...cn);
     return this;
   };
 
-  this.children = (...children) => {
-    this.$el.append(...children);
+  children = (...children) => {
+    this.#component.append(...children);
     return this;
   };
 }
